@@ -46,8 +46,8 @@ flowchart LR
 
 1. **Clone and install dependencies:**
    ```bash
-   git clone https://github.com/aahmeddev/DAPP2_MOL_Group_F-MYOWAVE.git
-   cd DAPP2_MOL_Group_F-MYOWAVE
+   git clone https://github.com/aahmeddev/myowave-ehg-platform.git
+   cd myowave-ehg-platform
    pip install -r requirements.txt
    ```
 
