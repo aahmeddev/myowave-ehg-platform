@@ -1,0 +1,14 @@
+# Web portals & UI
+nicegui>=2.0.0
+plotly>=5.18.0
+
+# Signal processing & data
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.11.0
+matplotlib>=3.8.0
+
+# Hardware serial & cloud persistence
+pyserial>=3.5
+firebase-admin>=6.5.0
+pyqtgraph>=0.13.0

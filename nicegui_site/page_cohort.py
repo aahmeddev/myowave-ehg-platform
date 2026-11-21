@@ -20,7 +20,7 @@ def clear_cohort_vault():
 
 
 def fetch_all_events():
-    """Retrieve events from Firebase, utilizing the cache if available."""
+    """Retrieve events from Firebase, using the in-memory cache if available."""
     if 'raw_df' in COHORT_VAULT:
         return COHORT_VAULT['raw_df']
 
@@ -36,7 +36,7 @@ def fetch_all_events():
 
 
 def generate_plots():
-    """Generate Plotly visualization objects or retrieve them from the cache."""
+    """Generate Plotly visualisation objects or retrieve them from the cache."""
 
     # 1. Evaluate cache availability.
     if 'plots' in COHORT_VAULT:

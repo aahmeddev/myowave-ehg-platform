@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+
+# IDEs & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime state, local databases & credentials
+.nicegui/
+*.db
+firebase_key.json
+session_control.json
+.env
+
+# Binaries
+*.exe

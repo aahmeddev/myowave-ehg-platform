@@ -1,40 +1,69 @@
-# MYOWAVE: Non-Invasive EHG Biosensor Platform
+# MYOWAVE: Non-Invasive Electrohysterography (EHG) Diagnostic Platform
 
-Developed as part of a Molecular Bioengineering design project at Imperial College London, **MYOWAVE** is a complete software ecosystem designed to acquire, process, and analyze uterine electromyography (EHG) signals. 
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![NiceGUI](https://img.shields.io/badge/UI-NiceGUI%20%2B%20Plotly-5898D4)](https://nicegui.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Built to support large-scale longitudinal menstrual health studies like the ENDO1000 project, this platform bridges the gap between raw hardware data acquisition and actionable clinical insights for conditions such as endometriosis, adenomyosis, and dysmenorrhea.
+**Winner of the Year 2 Molecular Bioengineering Prize for Best Design Group Project (Imperial College London).**
+
+MYOWAVE is a full-stack non-invasive electrohysterography (EHG) diagnostic platform built to acquire, filter, and analyse uterine electrical activity for longitudinal menstrual health research (evaluated for the **ENDO1000** clinical study targeting endometriosis, adenomyosis, and dysmenorrhoea).
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    A["ADS1299 Biopotential Front-End\n+ Arduino Shield (250 Hz Serial)"] --> B["Background DAQ & DSP Service\n(Butterworth HPF, RMS Burst Detection, Welch PSD)"]
+    B --> C["Local SQLite Fallback\n(ehg_research.db)"]
+    B --> D["Firebase Firestore\n(Pseudonymised Cloud Sync)"]
+    D --> E["Clinical Researcher Portal\n(NiceGUI, Port 8081)"]
+    D --> F["Mobile Participant Portal\n(NiceGUI, Port 8082)"]
+```
 
 ## Key Features
 
-* **Real-Time DSP Engine**: A background service that interfaces with custom EHG hardware (Arduino/ADS1299) via serial communication. It applies high-pass Butterworth filtering, performs root-mean-square (RMS) event detection, and extracts spectral features like Fast Wave Low (FWL) and Fast Wave High (FWH) power using Welch's method.
-* **Clinical Researcher Portal**: A secure, desktop-optimized dashboard built with NiceGUI. Researchers can monitor live hardware telemetry, track longitudinal patient trends, analyze morphological density profiles via Plotly clustering, and export standardized datasets.
-* **Patient Portal**: A mobile-first web application enabling participants to authenticate securely, sync menstrual cycle days, log subjective pain scores, and view hardware connectivity status in real time.
-* **Secure Cloud Synchronization**: Utilizes a nested NoSQL Firebase architecture for secure, pseudonymized data storage while maintaining a local SQLite database as a highly reliable fallback.
-* **Automated Tunneling**: Integrated Cloudflare Quick Tunnels allow secure, immediate remote access to both portals during testing phases without complex network configuration.
-
-## Technology Stack
-
-* **Core Logic**: Python 3
-* **User Interface**: NiceGUI, HTML/Tailwind CSS
-* **Data Science & DSP**: Pandas, NumPy, SciPy, Plotly
-* **Database**: Firebase (Firestore), SQLite3
-* **Hardware Interface**: PySerial
+- **Real-Time DSP Engine (`nicegui_site/background_service.py`, `dsp_math.py`):** Samples 250 Hz serial EHG streams from an ADS1299-6PAGR biopotential front-end, applies a 2nd-order 0.3 Hz high-pass Butterworth filter, detects contraction bursts via RMS thresholding (0.04 RMS, discarding transients under 0.2 s), and extracts Welch power spectral density across Fast Wave Low (0.34-1.0 Hz) and Fast Wave High (1.0-3.0 Hz) bands.
+- **Clinical Researcher Portal (`dashboard.py`, `page_*.py`):** Authenticated NiceGUI desktop dashboard (port 8081) for live hardware session control, cohort morphological analysis with Plotly, longitudinal patient tracking, and CSV dataset export.
+- **Mobile Participant Portal (`patient_app.py`):** Mobile-first web app (port 8082) for PIN-based participant sign-in, cycle-day syncing, pain logging, and live device connectivity status.
+- **Dual Local & Cloud Persistence (`config_db.py`):** Syncs pseudonymised event summaries to Firebase Firestore while maintaining a local SQLite database for resilient offline capture.
+- **Hardware Bench Verification (`Signal Testing/`, `test_codes/`):** Live PyQtGraph acquisition and automated test scripts verifying bandwidth attenuation (`T1_bandwidth_attenuation.py`), local event capture (`T2_local_events.py`), and 50 Hz common-mode rejection ratio (`T3_CMRR.py`).
 
 ## Repository Structure
 
-* `launcher.py`: The master execution script that initializes the background DAQ service, launches both web portals, and configures Cloudflare tunnels.
-* `background_service.py`: The continuous hardware polling and digital signal processing loop.
-* `dsp_math.py`: Core mathematical functions for signal feature extraction.
-* `dashboard.py` & `layout.py`: The entry point and shared UI wrapper for the researcher interface.
-* `page_manager.py`, `page_cohort.py`, `page_patient.py`, `page_export.py`: Modular routing pages for clinical data analysis.
-* `patient_app.py`: The standalone patient-facing web application.
-* `config_db.py`: Database initialization and local/cloud synchronization protocols.
-* `generate_synthetic_data.py`: A robust testing utility that generates clinically accurate, simulated EHG cohorts based on published physiological parameters.
-* `Hardware_Testing/`: A suite of diagnostic scripts (`CapturePeriod.py`, `LiveCapture.py`, `T1_bandwidth_attenuation.py`, etc.) for validating the analogue front-end and CMRR performance.
+| Path | Description |
+| :--- | :--- |
+| `nicegui_site/launcher.py` | Master entry point launching the DAQ service, both NiceGUI portals, and optional Cloudflare Quick Tunnels. |
+| `nicegui_site/background_service.py` | Continuous 250 Hz serial acquisition and real-time burst extraction service. |
+| `nicegui_site/dsp_math.py` | Butterworth filtering, RMS event detection, and Welch PSD feature extraction. |
+| `nicegui_site/dashboard.py` & `layout.py` | Authenticated researcher portal routing, session lifecycle failsafes, and shared layout. |
+| `nicegui_site/page_*.py` | Modular views for session control (`page_manager.py`), cohort analysis (`page_cohort.py`), patient history (`page_patient.py`), and exports (`page_export.py`). |
+| `nicegui_site/patient_app.py` | Standalone mobile-first participant web portal. |
+| `nicegui_site/config_db.py` | SQLite schema setup and Firebase Firestore initialisation. |
+| `nicegui_site/generate_synthetic_data.py` | Synthetic clinical cohort generator for end-to-end portal testing. |
+| `Signal Testing/` | PySerial and PyQtGraph live/period capture scripts (`CapturePeriod.py`, `LiveCapture.py`). |
+| `test_codes/` | Hardware verification scripts (`T1_bandwidth_attenuation.py`, `T2_local_events.py`, `T3_CMRR.py`). |
 
 ## Getting Started
 
-1. **Install Dependencies**: 
-   Ensure you have Python installed, then install the required packages:
+1. **Clone and install dependencies:**
    ```bash
-   pip install nicegui pandas numpy scipy plotly pyserial firebase-admin
+   git clone https://github.com/aahmeddev/DAPP2_MOL_Group_F-MYOWAVE.git
+   cd DAPP2_MOL_Group_F-MYOWAVE
+   pip install -r requirements.txt
+   ```
+
+2. **Configure credentials (local environment):**
+   - Place your Firebase service account JSON at `nicegui_site/firebase_key.json` (or set `FIREBASE_KEY_PATH`).
+   - Optionally set `MYOWAVE_ADMIN_PASSWORD` and `MYOWAVE_STORAGE_SECRET` as environment variables.
+   - *(Optional)* Install [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) on your PATH for remote Quick Tunnel access.
+
+3. **Launch the platform:**
+   ```bash
+   cd nicegui_site
+   python launcher.py
+   ```
+   - Researcher portal: `http://localhost:8081`
+   - Participant portal: `http://localhost:8082`
+
+## License
+
+Released under the [MIT License](LICENSE).
